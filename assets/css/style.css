@@ -110,6 +110,8 @@ input[type=text] {
 }
 input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.18); }
 .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.dl-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .btn {
   font: inherit; font-size: 14px; font-weight: 600; padding: 11px 20px; border-radius: 12px;
   border: 1px solid transparent; cursor: pointer; transition: all .18s ease; color: #fff;

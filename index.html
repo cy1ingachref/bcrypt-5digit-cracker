@@ -31,7 +31,7 @@
   <nav>
     <a href="#demo" class="nav-link">Live Cracker</a>
     <a href="#how" class="nav-link">How it works</a>
-    <a href="#code" class="nav-link">Python code</a>
+    <a href="#download" class="nav-link">Download</a>
     <a href="#ethics" class="nav-link">Ethics &amp; limits</a>
   </nav>
   <div class="socials">
@@ -111,24 +111,28 @@
       is effectively uncrackable.</p>
   </section>
 
-  <!-- PYTHON CODE -->
-  <section id="code" class="card">
-    <h3>Python implementation</h3>
-    <p class="muted">The same algorithm as a script (<code>cracker.py</code>).
-      It supports single-process and multiprocessing modes.</p>
-    <pre class="code"><code id="codeBlock">loading…</code></pre>
-    <p class="muted">
-      Run it:
-    </p>
-    <pre class="code"><code>pip install bcrypt
-# crack (single process)
-python cracker.py "$2b$04$..." 
+  <!-- DOWNLOAD -->
+  <section id="download" class="card">
+    <h3>Download the code</h3>
+    <p class="muted">Get the full project — the Python cracker (<code>cracker.py</code>),
+      this website, and the vendored bcrypt library.</p>
+    <div class="dl-row">
+      <a class="btn btn-primary" href="cracker.py" download>⬇ Python cracker (cracker.py)</a>
+      <a class="btn btn-ghost" href="index.html" download>⬇ This page (index.html)</a>
+      <a class="btn btn-ghost" href="vendor/bcrypt.min.js" download>⬇ bcrypt.js (vendor)</a>
+    </div>
+    <p class="muted" style="margin-top:16px">Or clone the whole repo:</p>
+    <pre class="code"><code>git clone https://github.com/cy1ingachref/bcrypt-5digit-cracker.git
+cd bcrypt-5digit-cracker
+pip install -r requirements.txt
 
-# crack using 4 CPU cores
-python cracker.py "$2b$04$..." --workers 4
+# crack a hash (single process)
+python cracker.py '$2b$04$...'
 
-# or pipe the hash in
-echo '$2b$04$...' | python cracker.py</code></pre>
+# use all CPU cores
+python cracker.py '$2b$04$...' --workers 4</code></pre>
+    <p class="muted">Exit codes: <code>0</code> = found, <code>1</code> = not found,
+      <code>2</code> = bad input / invalid hash.</p>
   </section>
 
   <!-- ETHICS -->

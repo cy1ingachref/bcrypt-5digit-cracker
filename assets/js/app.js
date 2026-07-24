@@ -37,7 +37,6 @@
   const rateEl = $("rate");
   const resultEl = $("result");
   const costHint = $("costHint");
-  const codeBlock = $("codeBlock");
 
   let worker = null;
   let startTime = 0;
@@ -169,12 +168,6 @@
   hashInput.addEventListener("input", () => warnCost(hashInput.value));
   startBtn.addEventListener("click", start);
   stopBtn.addEventListener("click", stop);
-
-  // ---- load python source into the page -----------------------------
-  fetch("cracker.py")
-    .then((r) => r.ok ? r.text() : "cracker.py not found in this deployment.")
-    .then((t) => { codeBlock.textContent = t; })
-    .catch(() => { codeBlock.textContent = "cracker.py not found in this deployment."; });
 
   // ---- starfield ----------------------------------------------------
   const canvas = document.getElementById("stars");
