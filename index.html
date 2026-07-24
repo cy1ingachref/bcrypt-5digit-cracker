@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bcrypt 5-Digit PIN Cracker — Demo</title>
+<meta name="description" content="Educational demo: brute-force a bcrypt hash against all 5-digit numeric PINs (00000-99999). Includes a working in-browser cracker and Python source." />
+<!-- Content-Security-Policy: strict, self-only (no external requests). -->
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<!-- animated background -->
+<div class="bg" aria-hidden="true">
+  <canvas id="stars"></canvas>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="avatar" aria-hidden="true">5#</div>
+  <h1 class="brand">BCrypt<span>5</span></h1>
+  <p class="tagline">5-digit PIN brute-force demo</p>
+  <nav>
+    <a href="#demo" class="nav-link">Live Cracker</a>
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#code" class="nav-link">Python code</a>
+    <a href="#ethics" class="nav-link">Ethics &amp; limits</a>
+  </nav>
+  <div class="socials">
+    <a href="https://github.com/cy1ingachref" target="_blank" rel="noopener" title="GitHub">GH</a>
+    <a href="https://cy1ingachref.github.io/Achref-Portfolio/" target="_blank" rel="noopener" title="Portfolio">PF</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="content">
+  <section id="hero">
+    <h2>Recover a 5-digit numeric PIN from a <span class="glow">bcrypt</span> hash</h2>
+    <p class="lede">
+      bcrypt is a one-way hash — there is no decryption. This demo brute-forces
+      the only feasible keyspace for a short numeric secret: every PIN from
+      <code>00000</code> to <code>99999</code> (100,000 candidates).
+    </p>
+    <div class="chips">
+      <span class="chip">100,000 candidates</span>
+      <span class="chip">5-digit numeric only</span>
+      <span class="chip">runs in your browser</span>
+      <span class="chip">no server</span>
+    </div>
+  </section>
+
+  <!-- LIVE DEMO -->
+  <section id="demo" class="card">
+    <h3>Live cracker</h3>
+    <p class="muted">Runs real bcrypt checks entirely in your browser (Web Worker).
+      Start with the <b>demo hash</b> (cost 4, finishes in seconds) to see it work.</p>
+
+    <label for="hash">bcrypt hash</label>
+    <input id="hash" type="text" spellcheck="false"
+      placeholder="$2b$04$..." />
+
+    <div class="row">
+      <button id="demoBtn" class="btn btn-ghost">Use demo hash</button>
+      <button id="startBtn" class="btn btn-primary">Start crack</button>
+      <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
+    </div>
+
+    <div id="status" class="status idle">Idle — paste a hash or click “Use demo hash”.</div>
+
+    <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+    <div class="meters">
+      <span>Checked: <b id="checked">0</b> / 100,000</span>
+      <span>Elapsed: <b id="elapsed">0.0</b>s</span>
+      <span>Rate: <b id="rate">0</b> c/s</span>
+    </div>
+
+    <div id="result" class="result hidden"></div>
+    <p class="hint" id="costHint"></p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="card">
+    <h3>How it works</h3>
+    <ol class="steps">
+      <li><b>Hash format.</b> A bcrypt hash looks like <code>$2b$04$salt…</code>. The
+        <code>04</code> is the <i>cost factor</i> (log2 of the rounds).</li>
+      <li><b>Brute force.</b> We try every candidate <code>00000…99999</code>,
+        running <code>bcrypt.verify(candidate, hash)</code> each time.</li>
+      <li><b>Match.</b> The first candidate that verifies is the PIN. Because the
+        space is only 100k, this is tractable — at low cost.</li>
+    </ol>
+    <table class="tbl">
+      <thead><tr><th>Cost</th><th>Per-check</th><th>Full 100k</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td>~1 ms</td><td>seconds</td></tr>
+        <tr><td>6</td><td>~5 ms</td><td>~10 min</td></tr>
+        <tr><td>10</td><td>~70 ms</td><td>~2 h</td></tr>
+        <tr><td>12</td><td>~320 ms</td><td>~9 h</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Higher cost = exponentially slower. This is exactly why bcrypt
+      is safe for real passwords: a 12-cost hash of an <i>unconstrained</i> password
+      is effectively uncrackable.</p>
+  </section>
+
+  <!-- PYTHON CODE -->
+  <section id="code" class="card">
+    <h3>Python implementation</h3>
+    <p class="muted">The same algorithm as a script (<code>cracker.py</code>).
+      It supports single-process and multiprocessing modes.</p>
+    <pre class="code"><code id="codeBlock">loading…</code></pre>
+    <p class="muted">
+      Run it:
+    </p>
+    <pre class="code"><code>pip install bcrypt
+# crack (single process)
+python cracker.py "$2b$04$..." 
+
+# crack using 4 CPU cores
+python cracker.py "$2b$04$..." --workers 4
+
+# or pipe the hash in
+echo '$2b$04$...' | python cracker.py</code></pre>
+  </section>
+
+  <!-- ETHICS -->
+  <section id="ethics" class="card">
+    <h3>Ethics &amp; limits</h3>
+    <ul class="steps">
+      <li>bcrypt is <b>not reversible</b> — this is a brute-force search, not decryption.</li>
+      <li>Only feasible because the keyspace is tiny (100k). Don't expect this to
+        break real passwords.</li>
+      <li>Use only on hashes you're <b>authorized</b> to test: your own accounts,
+        CTF challenges you're permitted to solve, or passwords you forgot for
+        your own data.</li>
+      <li>Cracking hashes you don't have permission to attack is illegal.</li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <span>Built as an educational demo.</span>
+    <a href="https://github.com/cy1ingachref" target="_blank" rel="noopener">cy1ingachref</a>
+  </footer>
+</main>
+
+<script src="vendor/bcrypt.min.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
