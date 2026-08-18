@@ -1,64 +1,102 @@
-# bcrypt 5-Digit PIN Cracker (educational demo)
+# bcrypt 5-Digit PIN Cracker
 
-Brute-force a **bcrypt** hash to recover a **5-digit numeric PIN** (`00000`–`99999`).
+A focused, high-performance educational tool to brute-force 5-digit numeric PINs (00000–99999) from bcrypt hashes. Intended for security auditing, research, and learning — not for unauthorized access.
 
-> ⚠️ **Honest framing:** bcrypt is a *one-way* hash. There is **no decryption**.
-> The only way to recover a password is to guess candidates and verify each one.
-> This tool searches the only keyspace where that is practical for a short numeric
-> secret: **100,000 candidates**. Use it only on hashes you are authorized to test.
+> ⚠️ Important: bcrypt is a one‑way hash. There is no decryption — this tool verifies candidate PINs against a hash. Use only on hashes you own or have explicit permission to test.
 
-## What's in here
+## Project overview
 
-| File | Purpose |
-|------|---------|
-| `cracker.py` | Python brute-forcer (single-process + multiprocessing) with a CLI. |
-| `index.html` | Static site: a **live, working in-browser cracker** + docs. |
-| `assets/js/worker.js` | Web Worker running real bcrypt checks in the browser. |
-| `assets/js/app.js` | UI, starfield, demo-hash generation. |
-| `assets/css/style.css` | Dark animated theme. |
-| `vendor/bcrypt.min.js` | Vendored bcrypt.js (dcodeIO) so the page works offline / on Pages. |
-| `requirements.txt` | `bcrypt` for the Python script. |
+This repository contains:
 
-## Why only 5 digits?
+- `cracker.py` — A Python brute-force script (single-process and multiprocessing support) with a simple CLI.
+- `index.html` and `assets/` — A browser-based demo that runs bcrypt checks in a Web Worker.
+- `vendor/bcrypt.min.js` — Vendored bcrypt.js for offline Pages/demo usage.
+- `requirements.txt` — Python dependencies (e.g., `bcrypt`).
 
-Because bcrypt is intentionally **slow per check**, the wall-clock time depends on
-the hash's *cost factor* (the `04` / `10` / `12` in `$2b$12$…`):
+The project demonstrates the security properties and limitations of short numeric passwords even when protected with bcrypt. It intentionally targets a constrained keyspace (100,000 candidates) to keep runtime practical for demonstrations.
+
+## Why 5 digits?
+
+bcrypt is intentionally slow by design. The practical time to exhaustively check candidates depends on the cost factor (the `$2b$12$` portion of the hash). A 5-digit numeric PIN limits the keyspace to 100,000 candidates, which makes exhaustive verification feasible for demonstrations at low cost factors.
+
+Cost factor examples (approximate per-check times):
 
 | Cost | Per check | 100k candidates |
-|------|-----------|-----------------|
-| 4    | ~1 ms     | seconds         |
-| 6    | ~5 ms     | ~10 min         |
-| 10   | ~70 ms    | ~2 h            |
-| 12   | ~320 ms   | ~9 h            |
+|------|-----------:|----------------:|
+| 4    | ~1 ms      | seconds         |
+| 6    | ~5 ms      | minutes         |
+| 10   | ~70 ms     | hours           |
+| 12   | ~320 ms    | many hours      |
 
-100,000 guesses is trivial *only* at low cost. For a real (unconstrained) password
-this is completely infeasible — that's the point of bcrypt.
+For real, unconstrained passwords, brute forcing bcrypt is impractical — that's the protection bcrypt provides.
 
-## Python usage
+## Quickstart — Python
+
+1. Create and activate a virtual environment (recommended):
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
 
-# crack a hash (single process)
+3. Examples
+
+Single-process:
+
+```bash
 python cracker.py '$2b$04$...'
+```
 
-# use all your CPU cores
+Using multiple workers (use the number of CPU cores appropriate for your system):
+
+```bash
 python cracker.py '$2b$04$...' --workers 4
+```
 
-# or pipe the hash in
+Pipe the hash via stdin:
+
+```bash
 echo '$2b$04$...' | python cracker.py
 ```
 
-Exit codes: `0` = found, `1` = not found, `2` = bad input/invalid hash.
+Exit codes:
+- `0` = PIN found
+- `1` = PIN not found
+- `2` = invalid input / bad hash
+
+Note: Runtime depends on bcrypt cost factor and available CPU. Use responsibly.
 
 ## Web demo
 
-Open `index.html` (or the deployed GitHub Pages site). Click **Use demo hash**
-then **Start crack** — it generates a real cost-4 hash of `00042` in your browser,
-then a Web Worker brute-forces it back. No server, no data leaves your machine.
+Open `index.html` locally or visit the GitHub Pages deployment (if available). The demo:
 
-## Ethics & legality
+- Generates a demo bcrypt hash in the browser (cost=4 by default) for a known 5-digit PIN.
+- Uses a Web Worker (`assets/js/worker.js`) to brute-force the PIN entirely in the browser — no server, no data leaves your machine.
 
-Cracking hashes you do not have permission to attack is illegal. This repository is
-for: your own accounts/passwords, CTF challenges you're permitted to solve, and
-learning how password hashing actually defends against brute force.
+This demo is intended for educational purposes only.
+
+## Responsible use and legal notice
+
+This tool is intended for password-auditing, research, and education. Unauthorized use against accounts, systems, or data you do not own is illegal and unethical. The repository owner and contributors are not responsible for misuse. Always obtain explicit authorization before testing.
+
+## Contributing
+
+Contributions that improve documentation, clarify ethical guidance, or enhance the demo are welcome. Please open issues or pull requests and follow standard contribution practices. If you plan to contribute code that increases cracking performance, include clear safety guidance and consider opt-in feature flags so the demo remains suitable for educational use.
+
+## License
+
+Include a license file (e.g., `LICENSE` with MIT or another license) to clarify reuse and liability. If you don't have a license, consider adding one.
+
+---
+
+If you'd like, I can also:
+- Add a short description for the repository About box (two variants: concise and formal), or
+- Update/format the index.html demo text and inline docs for consistency.
+
+Reply with which option you'd like next, or "done" if this README update is sufficient.
