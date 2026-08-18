@@ -88,15 +88,3 @@ This tool is intended for password-auditing, research, and education. Unauthoriz
 ## Contributing
 
 Contributions that improve documentation, clarify ethical guidance, or enhance the demo are welcome. Please open issues or pull requests and follow standard contribution practices. If you plan to contribute code that increases cracking performance, include clear safety guidance and consider opt-in feature flags so the demo remains suitable for educational use.
-
-## License
-
-Include a license file (e.g., `LICENSE` with MIT or another license) to clarify reuse and liability. If you don't have a license, consider adding one.
-
----
-
-If you'd like, I can also:
-- Add a short description for the repository About box (two variants: concise and formal), or
-- Update/format the index.html demo text and inline docs for consistency.
-
-Reply with which option you'd like next, or "done" if this README update is sufficient.
