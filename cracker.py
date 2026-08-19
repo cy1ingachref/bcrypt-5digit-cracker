@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import sys
 import time
+import re
 import argparse
 from typing import Optional, Tuple
 
@@ -64,19 +65,51 @@ def _batch_check(arg: tuple) -> Optional[str]:
     return None
 
 
+def cost_of(hash_str: str) -> Optional[int]:
+    """Return the bcrypt cost factor (log2 rounds) encoded in the hash, or None."""
+    m = re.match(r"^\$2[aby]\$(\d{1,2})\$", hash_str)
+    return int(m.group(1)) if m else None
+
+
+# Rough seconds-per-100k-candidates at each cost factor, measured on a
+# typical laptop CPU. Used only for an up-front ETA warning.
+_COST_ETA = {4: 3, 5: 6, 6: 12, 7: 25, 8: 50, 9: 100, 10: 200, 11: 400, 12: 800}
+
+
+def _warn_cost(hash_str: str, verbose: bool) -> None:
+    if not verbose:
+        return
+    c = cost_of(hash_str)
+    if c is None:
+        sys.stderr.write("  [warn] could not parse cost factor from hash\n")
+        return
+    eta = _COST_ETA.get(c, _COST_ETA[12] * (2 ** (c - 12)))
+    if c >= 10:
+        sys.stderr.write(
+            f"  [warn] cost {c}: full 100k search ~{eta/60:.0f} min on one core "
+            f"(~{eta/3600:.1f} h). Use a lower-cost hash for quick demos.\n"
+        )
+    else:
+        sys.stderr.write(f"  [info] cost {c}: full 100k search ~{eta}s on one core\n")
+
+
 def crack(hash_str: str,
           workers: int = 1,
-          verbose: bool = True) -> Tuple[Optional[str], float]:
-    """Brute-force a bcrypt hash against every 5-digit numeric PIN (00000-99999).
+          verbose: bool = True,
+          max_pin: int = 99_999) -> Tuple[Optional[str], float]:
+    """Brute-force a bcrypt hash against every 5-digit numeric PIN (00000-max_pin).
 
     Args:
         hash_str: the bcrypt hash, e.g. "$2b$04$..."
         workers:  number of worker processes (>=1).
-        verbose:  print progress / timing to stderr.
+        verbose:  print progress / timing / ETA to stderr.
+        max_pin:  upper bound of the keyspace (inclusive). Default 99999.
 
     Returns:
         (password, elapsed_seconds) on success, or (None, elapsed_seconds).
     """
+    if not (0 <= max_pin <= 99_999):
+        raise ValueError("max_pin must be between 0 and 99_999")
     hash_bytes = hash_str.encode("ascii")
     # Validate it is actually a bcrypt hash we can check.
     try:
@@ -84,7 +117,9 @@ def crack(hash_str: str,
     except (ValueError, TypeError) as exc:
         raise ValueError(f"Not a valid bcrypt hash: {exc}") from exc
 
-    total = 100_000
+    _warn_cost(hash_str, verbose)
+
+    total = max_pin + 1
     start_time = time.time()
     found: Optional[str] = None
 
@@ -97,9 +132,12 @@ def crack(hash_str: str,
             if verbose and (i + 1) % 20_000 == 0:
                 done = i + 1
                 elapsed = time.time() - start_time
+                rate = done / elapsed if elapsed else 0
+                remain = (total - done) / rate if rate else 0
                 sys.stderr.write(
                     f"  checked {done:,}/{total:,} "
-                    f"({done/total*100:.0f}%)  elapsed {elapsed:.1f}s\n"
+                    f"({done/total*100:.0f}%)  elapsed {elapsed:.1f}s  "
+                    f"ETA ~{remain/60:.1f} min\n"
                 )
     else:
         # NOTE: on Windows the default start method is 'spawn', which requires
@@ -175,6 +213,8 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument("hash", nargs="?", help="bcrypt hash (or pipe via stdin)")
     p.add_argument("-w", "--workers", type=int, default=1,
                    help="number of worker processes (default 1)")
+    p.add_argument("--max-pin", type=int, default=99_999,
+                   help="upper bound of keyspace, inclusive (default 99999)")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="suppress progress output")
     args = p.parse_args(argv)
@@ -186,7 +226,8 @@ def main(argv: Optional[list] = None) -> int:
         return 2
 
     try:
-        pw, elapsed = crack(h, workers=max(1, args.workers), verbose=not args.quiet)
+        pw, elapsed = crack(h, workers=max(1, args.workers),
+                            verbose=not args.quiet, max_pin=args.max_pin)
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
