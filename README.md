@@ -1,5 +1,7 @@
 # bcrypt 5-Digit PIN Cracker
 
+[![CI](https://github.com/cy1ingachref/bcrypt-5digit-cracker/actions/workflows/ci.yml/badge.svg)](https://github.com/cy1ingachref/bcrypt-5digit-cracker/actions/workflows/ci.yml)
+
 A focused, educational tool to brute-force 5-digit numeric PINs (00000–99999) from bcrypt hashes. Intended for security auditing, research, and learning — not for unauthorized access.
 
 > ⚠️ **Important**: bcrypt is a one-way hash. There is no decryption — this tool verifies candidate PINs against a hash. Use only on hashes you own or have explicit permission to test.
